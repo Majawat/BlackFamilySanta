@@ -115,7 +115,7 @@
 <body>
     <div class="container">
         <h1>🎅 Not-So-Secret Santa 🎄</h1>
-        <p class="subtitle">Family Gift Exchange Generator</p>
+        <p class="subtitle">Black Family Gift Exchange Generator</p>
         
         <button onclick="generateAssignments()">Generate Assignments</button>
         
@@ -127,27 +127,27 @@
             // Define all participants
             const people = [
                 "Cody",
-                "Amanda (Cody's)",
+                "MandaMay",
                 "Julian",
                 "Charlie",
                 "Luke",
-                "Amanda (Luke's)",
+                "Amanda 1",
                 "David",
                 "Jennelle",
                 "Mom"
             ];
             
             // Define forbidden pairs
-            // Cody's household: Cody, Amanda (Cody's), Julian, Charlie
-            // Luke's household: Luke, Amanda (Luke's)
+            // Cody's household: Cody, MandaMay, Julian, Charlie
+            // Luke's household: Luke, Amanda 1
             // David's household: David, Jennelle
             const forbidden = {
-                "Cody": new Set(["Amanda (Cody's)", "Julian", "Charlie"]),
-                "Amanda (Cody's)": new Set(["Cody", "Julian", "Charlie"]),
-                "Julian": new Set(["Cody", "Amanda (Cody's)", "Charlie"]),
-                "Charlie": new Set(["Cody", "Amanda (Cody's)", "Julian"]),
-                "Luke": new Set(["Amanda (Luke's)"]),
-                "Amanda (Luke's)": new Set(["Luke"]),
+                "Cody": new Set(["MandaMay", "Julian", "Charlie"]),
+                "MandaMay": new Set(["Cody", "Julian", "Charlie"]),
+                "Julian": new Set(["Cody", "MandaMay", "Charlie"]),
+                "Charlie": new Set(["Cody", "MandaMay", "Julian"]),
+                "Luke": new Set(["Amanda 1"]),
+                "Amanda 1": new Set(["Luke"]),
                 "David": new Set(["Jennelle"]),
                 "Jennelle": new Set(["David"]),
                 "Mom": new Set()
@@ -221,7 +221,6 @@
                 }
                 
                 html += '</div>';
-                html += '<div class="success-message">✨ Everyone has someone! ✨</div>';
                 
                 resultsDiv.innerHTML = html;
                 
