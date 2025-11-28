@@ -57,12 +57,33 @@
             transform: translateY(0);
         }
         
+        .permutation-info {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+        }
+        
+        .permutation-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .permutation-total {
+            color: #666;
+            font-size: 14px;
+        }
+        
         .assignments {
             margin-top: 20px;
         }
         
         .assignment {
-            padding: 15px;
+            padding: 5px;
             margin: 10px 0;
             background: #f8f9fa;
             border-left: 4px solid #667eea;
@@ -93,14 +114,6 @@
             color: #555;
         }
         
-        .success-message {
-            text-align: center;
-            margin-top: 30px;
-            color: #28a745;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        
         .error-message {
             text-align: center;
             margin-top: 30px;
@@ -109,6 +122,13 @@
             padding: 15px;
             background: #f8d7da;
             border-radius: 8px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+            padding: 20px;
         }
     </style>
 </head>
@@ -123,110 +143,116 @@
     </div>
 
     <script>
-        function secretSanta() {
-            // Define all participants
-            const people = [
-                "Cody",
-                "MandaMay",
-                "Julian",
-                "Charlie",
-                "Luke",
-                "Amanda 1",
-                "David",
-                "Jennelle",
-                "Mom"
-            ];
-            
-            // Define forbidden pairs
-            // Cody's household: Cody, MandaMay, Julian, Charlie
-            // Luke's household: Luke, Amanda 1
-            // David's household: David, Jennelle
-            const forbidden = {
-                "Cody": new Set(["MandaMay", "Julian", "Charlie"]),
-                "MandaMay": new Set(["Cody", "Julian", "Charlie"]),
-                "Julian": new Set(["Cody", "MandaMay", "Charlie"]),
-                "Charlie": new Set(["Cody", "MandaMay", "Julian"]),
-                "Luke": new Set(["Amanda 1"]),
-                "Amanda 1": new Set(["Luke"]),
-                "David": new Set(["Jennelle"]),
-                "Jennelle": new Set(["David"]),
-                "Mom": new Set()
-            };
-            
-            const maxAttempts = 10000;
-            
-            for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                // Create a copy of people to draw from
-                let available = [...people];
-                let assignments = {};
-                let valid = true;
-                
-                // Shuffle the order we assign people
-                let givers = [...people];
-                shuffleArray(givers);
-                
-                for (let giver of givers) {
-                    // Get valid options (not themselves, not forbidden)
-                    let validOptions = available.filter(p => 
-                        p !== giver && !forbidden[giver].has(p)
-                    );
-                    
-                    if (validOptions.length === 0) {
-                        // Hit a dead end, retry
-                        valid = false;
-                        break;
-                    }
-                    
-                    // Pick a random valid receiver
-                    let receiver = validOptions[Math.floor(Math.random() * validOptions.length)];
-                    assignments[giver] = receiver;
-                    available = available.filter(p => p !== receiver);
-                }
-                
-                if (valid) {
-                    return assignments;
-                }
-            }
-            
-            throw new Error(`Could not find valid assignment after ${maxAttempts} attempts`);
-        }
+        // Define all participants
+        const people = [
+            "Cody",
+            "MandaMay",
+            "Julian",
+            "Charlie",
+            "Luke",
+            "Amanda 1",
+            "David",
+            "Jennelle",
+            "Mom"
+        ];
         
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        // Define forbidden pairs
+        const forbidden = {
+            "Cody": new Set(["MandaMay", "Julian", "Charlie"]),
+            "MandaMay": new Set(["Cody", "Julian", "Charlie"]),
+            "Julian": new Set(["Cody", "MandaMay", "Charlie"]),
+            "Charlie": new Set(["Cody", "MandaMay", "Julian"]),
+            "Luke": new Set(["Amanda 1"]),
+            "Amanda 1": new Set(["Luke"]),
+            "David": new Set(["Jennelle"]),
+            "Jennelle": new Set(["David"]),
+            "Mom": new Set()
+        };
+        
+        // Cache for all valid permutations
+        let allValidPermutations = null;
+        
+        function generateAllValidPermutations() {
+            if (allValidPermutations !== null) {
+                return allValidPermutations;
             }
+            
+            const validPerms = [];
+            
+            // Generate all permutations using backtracking
+            function backtrack(givers, available, assignments) {
+                if (givers.length === 0) {
+                    // Found a valid complete assignment
+                    validPerms.push({...assignments});
+                    return;
+                }
+                
+                const giver = givers[0];
+                const remainingGivers = givers.slice(1);
+                
+                // Try each valid option for this giver
+                for (let receiver of available) {
+                    if (receiver !== giver && !forbidden[giver].has(receiver)) {
+                        const newAvailable = available.filter(p => p !== receiver);
+                        const newAssignments = {...assignments, [giver]: receiver};
+                        backtrack(remainingGivers, newAvailable, newAssignments);
+                    }
+                }
+            }
+            
+            backtrack([...people], [...people], {});
+            allValidPermutations = validPerms;
+            return validPerms;
         }
         
         function generateAssignments() {
             const resultsDiv = document.getElementById('results');
             
-            try {
-                const assignments = secretSanta();
-                
-                // Sort by giver name for consistent display
-                const sortedGivers = Object.keys(assignments).sort();
-                
-                let html = '<div class="assignments">';
-                
-                for (let giver of sortedGivers) {
-                    const receiver = assignments[giver];
-                    html += `
-                        <div class="assignment">
-                            <span class="giver">${giver}</span>
-                            <span class="arrow">→</span>
-                            <span class="receiver">${receiver}</span>
-                        </div>
-                    `;
+            // Show loading message
+            resultsDiv.innerHTML = '<div class="loading">Calculating all possible permutations...</div>';
+            
+            // Use setTimeout to allow the loading message to display
+            setTimeout(() => {
+                try {
+                    // Generate all valid permutations
+                    const allPerms = generateAllValidPermutations();
+                    
+                    if (allPerms.length === 0) {
+                        throw new Error("No valid permutations found!");
+                    }
+                    
+                    // Pick a random permutation
+                    const randomIndex = Math.floor(Math.random() * allPerms.length);
+                    const assignments = allPerms[randomIndex];
+                    
+                    // Sort by giver name for consistent display
+                    const sortedGivers = Object.keys(assignments).sort();
+                    
+                    let html = '<div class="assignments">';
+                    
+                    for (let giver of sortedGivers) {
+                        const receiver = assignments[giver];
+                        html += `
+                            <div class="assignment">
+                                <span class="giver">${giver}</span>
+                                <span class="arrow">→</span>
+                                <span class="receiver">${receiver}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    html += '</div>';
+                    html += `<div class="permutation-info">
+                        <div class="permutation-number">Permutation #${randomIndex + 1}</div>
+                        <div class="permutation-total">out of ${allPerms.length.toLocaleString()} possible valid arrangements</div>
+                    </div>`;
+                    
+                    resultsDiv.innerHTML = html;
+                    
+                } catch (error) {
+                    resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
                 }
-                
-                html += '</div>';
-                
-                resultsDiv.innerHTML = html;
-                
-            } catch (error) {
-                resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
-            }
+            }, 100);
         }
     </script>
 </body>
